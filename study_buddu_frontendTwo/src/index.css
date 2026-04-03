@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cyber-cyan: #00FBFF;
+  --color-cyber-pink: #FF00FF;
+  --color-cyber-dark: #000000;
+  --color-cyber-gray: #1a1a1a;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Syncopate', 'Inter', sans-serif;
+}
+
+/* Global Styles */
+@layer base {
+  body {
+    @apply m-0 p-0 text-gray-300 font-sans antialiased overflow-x-hidden bg-black selection:bg-cyber-cyan selection:text-black;
+  }
+}
+
+/* Utilities for complex styling */
+@layer utilities {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    border-color: rgba(0, 251, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 251, 255, 0.1);
+  }
+
+  .glass-input {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    color: white;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .glass-input:focus {
+    outline: none;
+    border-color: var(--color-cyber-cyan);
+    box-shadow: 0 0 10px rgba(0, 251, 255, 0.2);
+  }
+
+  .neon-text-cyan {
+    text-shadow: 0 0 10px rgba(0, 251, 255, 0.5), 0 0 20px rgba(0, 251, 255, 0.3);
+  }
+
+  .neon-text-pink {
+    text-shadow: 0 0 10px rgba(255, 0, 255, 0.5), 0 0 20px rgba(255, 0, 255, 0.3);
+  }
+}

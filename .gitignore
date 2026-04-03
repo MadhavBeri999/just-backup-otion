@@ -1,0 +1,28 @@
+# Node modules
+**/node_modules/
+
+# Next.js build output
+**/.next/
+
+# Python virtual environments
+**/venv/
+**/env/
+**/.env/
+
+# Python cache
+**/__pycache__/
+**/*.pyc
+
+# Local environment variables
+.env*.local
+.env
+
+# Project specific
+**/dist/
+**/build/
+**.log
+**.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db

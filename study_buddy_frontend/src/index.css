@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@theme {
+  --color-chalk-white: #e2e8f0;
+  --color-chalk-blue: #7dd3fc;
+  --color-chalk-pink: #f9a8d4;
+  --color-chalk-green: #86efac;
+  --color-chalk-yellow: #fde047;
+  
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Caveat', 'Permanent Marker', cursive;
+}
+
+/* Global Styles */
+@layer base {
+  body {
+    @apply m-0 p-0 text-chalk-white font-sans antialiased overflow-x-hidden bg-black;
+  }
+}
+
+/* Utilities for complex styling */
+@layer utilities {
+  .bg-chalkboard {
+    background-image: url('/chalkboard.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    border-radius: 1rem;
+  }
+
+  .glass-input {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+    color: white;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .glass-input:focus {
+    outline: none;
+    border-color: var(--color-chalk-blue);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .floating-element {
+    animation: float 6s ease-in-out infinite;
+  }
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
