@@ -23,7 +23,7 @@ import {
 import Link from "next/link"
 import { useParams } from "next/navigation"
 
-type WarningType = "none" | "phone" | "no_face";
+type WarningType = "none" | "phone" | "no_face" | "looking_down";
 
 export default function StudySessionPage() {
   const params = useParams()
@@ -216,7 +216,7 @@ export default function StudySessionPage() {
   }
 
   // MASTER PUNISHMENT FUNCTION: Locks detection logically with animation
-  const triggerDistraction = useCallback((distractionType: "tab-switch" | "back-button" | "cross-button" | "phone" | "no_face") => {
+  const triggerDistraction = useCallback((distractionType: "tab-switch" | "back-button" | "cross-button" | "phone" | "no_face" | "looking_down") => {
     if (gameState.current.isComplete || gameState.current.isGameOver) return;
 
     reportAlertAPI();
@@ -240,7 +240,7 @@ export default function StudySessionPage() {
   }, [sessionId, stopWebcam]);
 
   // LIVE AI PARSING (Now accepts the exact box from detector.ts)
-  const handleAIDetection = useCallback((type: "phone" | "no_face" | "face_present", bbox?: [number, number, number, number]) => {
+  const handleAIDetection = useCallback((type: "phone" | "no_face" | "face_present" | "looking_down", bbox?: [number, number, number, number]) => {
     if (gameState.current.isComplete || gameState.current.isGameOver) return;
 
     // Box Positioning Logic
@@ -309,6 +309,19 @@ export default function StudySessionPage() {
           });
         }, 1000);
       }, 1000); // Only waited 1s internally due to the detector.ts supplying 5s prior
+    }
+
+    // 4. LOOKING DOWN
+    if (type === "looking_down") {
+      if (warning === "looking_down") return;
+      if (now - lastPenaltyTime.current < 5000) return; // 5s padding
+
+      setWarning("looking_down");
+      triggerDistraction("looking_down"); // <- Hits game logic!
+      lastPenaltyTime.current = now;
+
+      // Let the warning stick briefly
+      setTimeout(() => setWarning("none"), 3500);
     }
   }, [warning, triggerDistraction]);
 
@@ -562,6 +575,7 @@ export default function StudySessionPage() {
                 <div className="flex gap-2">
                   <button onClick={() => handleAIDetection("face_present")} className="px-2 py-1 bg-black/60 text-[10px] text-white rounded border border-white/20 hover:bg-black/80">Reset</button>
                   <button onClick={() => handleAIDetection("phone")} className="px-2 py-1 bg-black/60 text-[10px] text-neon-pink rounded border border-neon-pink/50 hover:bg-neon-pink/20">Test Phone</button>
+                  <button onClick={() => handleAIDetection("looking_down")} className="px-2 py-1 bg-black/60 text-[10px] text-neon-pink rounded border border-neon-pink/50 hover:bg-neon-pink/20">Test Gaze</button>
                   <button onClick={() => handleAIDetection("no_face")} className="px-2 py-1 bg-black/60 text-[10px] text-red-500 rounded border border-red-500/50 hover:bg-red-500/20">Test AFK</button>
                 </div>
               </div>
@@ -585,9 +599,9 @@ export default function StudySessionPage() {
                     />
                   )}
 
-                  {/* Phone Detected - DYNAMIC BOX WRAPPER TARGET */}
+                  {/* Phone Detected or Looking Down - DYNAMIC BOX WRAPPER TARGET */}
                   <AnimatePresence>
-                    {warning === "phone" && aiBox && (
+                    {(warning === "phone" || warning === "looking_down") && aiBox && (
                       <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         className="absolute border-4 border-neon-pink shadow-[0_0_30px_rgba(236,72,153,0.8)] rounded-xl animate-pulse backdrop-blur-[1px] pointer-events-none flex items-end justify-center pb-2 transition-all duration-300"
@@ -597,7 +611,7 @@ export default function StudySessionPage() {
                       >
                         {/* WARNING POP OUT BELOW THE BOX OF THE PHONE */}
                         <div className="absolute -bottom-10 bg-neon-pink text-white font-black px-4 py-1.5 rounded-full text-[10px] tracking-widest uppercase shadow-[0_0_20px_rgba(236,72,153,0.6)] whitespace-nowrap">
-                          ⚠️ PHONE DETECTED
+                          {warning === "phone" ? "⚠️ PHONE DETECTED" : "⚠️ SUSPICIOUS HEAD TILT (POSSIBLE PHONE)"}
                         </div>
                       </motion.div>
                     )}

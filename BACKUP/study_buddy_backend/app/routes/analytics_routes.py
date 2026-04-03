@@ -4,29 +4,139 @@ from sqlalchemy import func
 from datetime import date, datetime
 
 from app.database.db import get_db
-from app.database.models import StudySession, Child, Parent, Task
-from app.services.analytics_service import get_weekly_summary_basic
-from app.services.analytics_service import get_weekly_daily_breakdown
+from app.database.models import StudySession, Child, Parent, Task, AIPrompt
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import PlainTextResponse
 from app.core.auth import get_current_parent
+from datetime import timedelta
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 
-# =========================================
-# EXISTING ROUTES (UNCHANGED)
-# =========================================
+@router.get("/child/{child_id}/details")
+def get_child_analytics(
+    child_id: int,
+    db: Session = Depends(get_db),
+    current_parent: Parent = Depends(get_current_parent),
+):
+    child = (
+        db.query(Child)
+        .filter(Child.id == child_id, Child.parent_id == current_parent.id)
+        .first()
+    )
+    if not child:
+        raise HTTPException(status_code=404, detail="Child not found")
+
+    # 1. Sessions
+    all_sessions = (
+        db.query(StudySession).filter(StudySession.child_id == child_id).all()
+    )
+
+    total_study_minutes = 0
+    total_alerts = 0
+
+    for session in all_sessions:
+        total_alerts += session.alert_count
+        if session.status == "completed" and session.task:
+            total_study_minutes += session.task.duration_minutes
+        elif session.status == "terminated" and session.start_time and session.end_time:
+            import math
+
+            diff = session.end_time - session.start_time
+            total_study_minutes += max(1, math.ceil(diff.total_seconds() / 60.0))
+
+    # 2. Completed Tasks
+    completed_tasks = (
+        db.query(Task).filter(Task.child_id == child_id, Task.is_completed == 1).count()
+    )
+
+    # 3. AI Queries
+    ai_prompts = (
+        db.query(AIPrompt)
+        .filter(AIPrompt.child_id == child_id)
+        .order_by(AIPrompt.created_at.desc())
+        .all()
+    )
+    total_ai_queries = len(ai_prompts)
+    recent_topics = [
+        {
+            "prompt": p.prompt,
+            "created_at": p.created_at.isoformat() if p.created_at else "",
+        }
+        for p in ai_prompts[:10]
+    ]
+
+    # 4. Daily Data (Mon-Sun of current week)
+    now = datetime.utcnow()
+    monday_start = (now - timedelta(days=now.weekday())).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+
+    daily_data = {
+        0: {"day": "Mon", "studyMinutes": 0, "alerts": 0, "queries": 0},
+        1: {"day": "Tue", "studyMinutes": 0, "alerts": 0, "queries": 0},
+        2: {"day": "Wed", "studyMinutes": 0, "alerts": 0, "queries": 0},
+        3: {"day": "Thu", "studyMinutes": 0, "alerts": 0, "queries": 0},
+        4: {"day": "Fri", "studyMinutes": 0, "alerts": 0, "queries": 0},
+        5: {"day": "Sat", "studyMinutes": 0, "alerts": 0, "queries": 0},
+        6: {"day": "Sun", "studyMinutes": 0, "alerts": 0, "queries": 0},
+    }
+
+    for session in all_sessions:
+        if session.start_time and session.start_time >= monday_start:
+            day_idx = session.start_time.weekday()
+            daily_data[day_idx]["alerts"] += session.alert_count
+            if session.status == "completed" and session.task:
+                daily_data[day_idx]["studyMinutes"] += session.task.duration_minutes
+            elif session.status == "terminated" and session.end_time:
+                import math
+
+                diff = session.end_time - session.start_time
+                daily_data[day_idx]["studyMinutes"] += max(
+                    1, math.ceil(diff.total_seconds() / 60.0)
+                )
+
+    for prompt in ai_prompts:
+        if prompt.created_at and prompt.created_at >= monday_start:
+            day_idx = prompt.created_at.weekday()
+            daily_data[day_idx]["queries"] += 1
+
+    weekly_daily_data = [daily_data[i] for i in range(7)]
+
+    return {
+        "summary": {
+            "totalStudyMinutes": total_study_minutes,
+            "totalAlerts": total_alerts,
+            "completedTasks": completed_tasks,
+            "totalQueries": total_ai_queries,
+        },
+        "weeklyDailyData": weekly_daily_data,
+        "recentTopics": recent_topics,
+    }
 
 
-@router.get("/child/{child_id}/weekly-summary-basic")
-def weekly_summary_basic(child_id: int, db: Session = Depends(get_db)):
-    summary = get_weekly_summary_basic(db, child_id)
-    return {"child_id": child_id, **summary}
+@router.get("/child/{child_id}/report/download", response_class=PlainTextResponse)
+def download_report(
+    child_id: int,
+    db: Session = Depends(get_db),
+    current_parent: Parent = Depends(get_current_parent),
+):
+    child = (
+        db.query(Child)
+        .filter(Child.id == child_id, Child.parent_id == current_parent.id)
+        .first()
+    )
+    if not child:
+        raise HTTPException(status_code=404, detail="Child not found")
 
+    from app.services.analytics_service import generate_report_content
 
-@router.get("/child/{child_id}/weekly-daily-breakdown")
-def weekly_daily_breakdown(child_id: int, db: Session = Depends(get_db)):
-    breakdown = get_weekly_daily_breakdown(db, child_id)
-    return breakdown
+    report_content = generate_report_content(db, child.id, child.name)
+
+    headers = {
+        "Content-Disposition": f"attachment; filename=report_{child.name.replace(' ', '_')}.txt"
+    }
+    return PlainTextResponse(content=report_content, headers=headers)
 
 
 # =========================================
@@ -62,33 +172,32 @@ def dashboard_summary(
         .count()
     )
 
-    # 3️⃣ Today's study minutes (Dynamically calculated from start/end times if available)
-    today = date.today()
-
-    today_sessions = (
+    # timezone-agnostic check: fetch recently completed and terminated sessions
+    recent_sessions = (
         db.query(StudySession)
         .filter(
             StudySession.child_id.in_(children_ids),
-            func.date(StudySession.start_time) == today,
-            StudySession.status == "completed",
+            StudySession.status.in_(["completed", "terminated"]),
         )
+        .order_by(StudySession.start_time.desc())
+        .limit(100)
         .all()
     )
 
     today_study_minutes = 0
-    for session in today_sessions:
-        if session.start_time and session.end_time:
-            # Calculate exact duration (ceil so 1m isn't rounded to 0m)
-            import math
+    now_utc = datetime.utcnow()
+    import math
 
-            diff = session.end_time - session.start_time
-            # If someone runs a task for just 5s, round it up to "1 min" so it registers!
-            duration_minutes = math.ceil(diff.total_seconds() / 60.0)
-            today_study_minutes += max(1, duration_minutes)
-        else:
-            # Fallback to task duration if end_time isn't reliably saved
-            if session.task:
-                today_study_minutes += session.task.duration_minutes
+    for session in recent_sessions:
+        if session.start_time:
+            # If session happened within last 24 hours, consider it "today" natively
+            if (now_utc - session.start_time).total_seconds() < 86400:
+                if session.status == "completed" and session.task:
+                    today_study_minutes += session.task.duration_minutes
+                elif session.status == "terminated" and session.end_time:
+                    diff = session.end_time - session.start_time
+                    duration_minutes = math.ceil(diff.total_seconds() / 60.0)
+                    today_study_minutes += max(1, duration_minutes)
 
     # 4️⃣ Total alerts (Sum of alert_count)
     total_alerts = (

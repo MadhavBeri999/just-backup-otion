@@ -26,3 +26,7 @@
 # OS files
 .DS_Store
 Thumbs.db
+
+# Secret keys (NEVER push)
+**/secret_key.txt
+**/app/core/config.py

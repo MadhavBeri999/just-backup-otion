@@ -1,15 +1,17 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 import google.generativeai as genai
+import os
 from sqlalchemy.orm import Session
 
 from app.database.db import get_db
 from app.database.models import AIPrompt
+from app.core.config import GEMINI_API_KEY
 
 router = APIRouter()
 
-# Directly adding Gemini API key here
-genai.configure(api_key="AIzaSyCg_wRtvE1kxUvhw6BZgs6LpnIIn1o8ako")
+# Configure Gemini with the secure API key from config.py
+genai.configure(api_key=GEMINI_API_KEY)
 
 model = genai.GenerativeModel("gemini-2.5-flash")
 
@@ -43,22 +45,27 @@ Example (if useful):
 
 @router.post("/ai/chat")
 async def chat_ai(data: ChatRequest, db: Session = Depends(get_db)):
+    try:
+        final_prompt = f"{SYSTEM_PROMPT}\n\nStudent Question:\n{data.message}"
 
-    final_prompt = f"{SYSTEM_PROMPT}\n\nStudent Question:\n{data.message}"
+        response = model.generate_content(final_prompt)
+        reply = response.text
 
-    response = model.generate_content(final_prompt)
+        # Save prompt for analytics
+        prompt_record = AIPrompt(
+            child_id=data.child_id, prompt=data.message, response=reply
+        )
 
-    reply = response.text
+        db.add(prompt_record)
+        db.commit()
 
-    # Save prompt for analytics
-    prompt_record = AIPrompt(
-        child_id=data.child_id, prompt=data.message, response=reply
-    )
-
-    db.add(prompt_record)
-    db.commit()
-
-    return {"reply": reply}
+        return {"reply": reply}
+    except Exception as e:
+        print(f"AI Chat Error: {str(e)}")
+        return {
+            "reply": "Sorry, I'm having trouble thinking right now. Please try again!",
+            "error": str(e),
+        }
 
 
 @router.get("/ai/prompts/{child_id}")

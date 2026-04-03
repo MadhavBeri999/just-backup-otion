@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
@@ -6,7 +6,6 @@ from app.database.db import get_db
 from app.database.models import StudySession, Child, Task, Parent
 from app.schemas.session_schema import SessionStart, SessionResponse
 from app.core.auth import get_current_parent
-from app.services.email_service import send_parent_alert_email
 
 router = APIRouter(prefix="/sessions", tags=["Study Sessions"])
 
@@ -21,6 +20,8 @@ def check_and_auto_complete(session: StudySession, db: Session):
     if session.status == "active" and datetime.utcnow() >= expected_end:
         session.status = "completed"
         session.end_time = expected_end
+        if session.task:
+            session.task.is_completed = 1
         db.commit()
         db.refresh(session)
 
@@ -82,6 +83,10 @@ def start_session(
 @router.post("/{session_id}/end", response_model=SessionResponse)
 def end_session(
     session_id: int,
+    background_tasks: BackgroundTasks,
+    status: str = "completed",
+    lat: float = None,
+    lng: float = None,
     db: Session = Depends(get_db),
     current_parent: Parent = Depends(get_current_parent),
 ):
@@ -98,16 +103,66 @@ def end_session(
     # Check auto completion before manual ending
     check_and_auto_complete(session, db)
 
-    if session.status != "active":
-        return session  # Allow re-sending done without erroring out
+    if session.status == "active":
+        session.end_time = datetime.utcnow()
+        # Explicitly check if the task wasn't terminated originally
+        if session.status != "terminated":
+            # Allow the provided status to override
+            session.status = status
+            if session.task and session.status == "completed":
+                session.task.is_completed = 1
 
-    session.end_time = datetime.utcnow()
-    # Explicitly check if the task wasn't terminated
-    if session.status != "terminated":
-        session.status = "completed"
+        db.commit()
+        db.refresh(session)
 
-    db.commit()
-    db.refresh(session)
+    # -----------------------------
+    # TRIGGER PARENT EMAIL ALERT (EXACT-ONCE DELIVERY)
+    # -----------------------------
+    child = db.query(Child).filter(Child.id == session.child_id).first()
+
+    if (
+        child
+        and current_parent.email
+        and not getattr(session, "parent_notified", False)
+    ):
+        session.parent_notified = True
+        db.commit()
+
+        from app.services.email_service import send_success_email, send_failure_email
+        from app.services.analytics_service import generate_report_content
+
+        task_title = session.task.title if session.task else "Focus Mission"
+
+        report_content = generate_report_content(db, child.id, child.name)
+
+        if session.status == "completed":
+            background_tasks.add_task(
+                send_success_email,
+                parent_email=current_parent.email,
+                child_name=child.name,
+                task_name=task_title,
+                lat=lat,
+                lng=lng,
+                report_content=report_content,
+            )
+        else:
+            import math
+
+            minutes_spent = 0
+            if session.start_time and session.end_time:
+                diff = session.end_time - session.start_time
+                minutes_spent = max(1, math.ceil(diff.total_seconds() / 60.0))
+
+            background_tasks.add_task(
+                send_failure_email,
+                parent_email=current_parent.email,
+                child_name=child.name,
+                task_name=task_title,
+                minutes_spent=minutes_spent,
+                lat=lat,
+                lng=lng,
+                report_content=report_content,
+            )
 
     return session
 

@@ -87,3 +87,40 @@ def get_weekly_daily_breakdown(db: Session, child_id: int):
         "sessions_per_day": sessions_per_day,
         "alerts_per_day": alerts_per_day,
     }
+
+
+def generate_report_content(db: Session, child_id: int, child_name: str) -> str:
+    from app.database.models import Task, AIPrompt
+    import math
+
+    all_sessions = (
+        db.query(StudySession).filter(StudySession.child_id == child_id).all()
+    )
+
+    total_study_minutes = 0
+    total_alerts = 0
+
+    for session in all_sessions:
+        total_alerts += session.alert_count
+        if session.status == "completed" and session.task:
+            total_study_minutes += session.task.duration_minutes
+        elif session.status == "terminated" and session.start_time and session.end_time:
+            diff = session.end_time - session.start_time
+            total_study_minutes += max(1, math.ceil(diff.total_seconds() / 60.0))
+
+    completed_tasks = (
+        db.query(Task).filter(Task.child_id == child_id, Task.is_completed == 1).count()
+    )
+    total_ai_queries = db.query(AIPrompt).filter(AIPrompt.child_id == child_id).count()
+
+    report = f"--- Padhle Bhai Weekly Report ---\n"
+    report += f"Student: {child_name}\n"
+    report += (
+        f"Total Study Time: {total_study_minutes // 60}h {total_study_minutes % 60}m\n"
+    )
+    report += f"Total Focus Alerts: {total_alerts}\n"
+    report += f"Completed Tasks: {completed_tasks}\n"
+    report += f"Total Buddy AI Queries: {total_ai_queries}\n"
+    report += f"---------------------------------\n"
+
+    return report

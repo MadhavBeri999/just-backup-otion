@@ -68,8 +68,43 @@ export default function AnalyticsPage() {
     fetchData()
   }, [childId])
 
-  const handleDownloadReport = () => {
-    console.log("Downloading report for", childId)
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [downloadMsg, setDownloadMsg] = useState("")
+
+  const handleDownloadReport = async () => {
+    const token = localStorage.getItem("token")
+    if (!token) return
+
+    setIsDownloading(true)
+    setDownloadMsg("")
+
+    try {
+      const numericId = childId.replace(/\D/g, "")
+      const res = await fetch(`http://localhost:8001/report/download/${numericId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      if (!res.ok) throw new Error("Failed to generate report")
+
+      // Trigger browser file download
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `PadhleBhai_Report_${childId}_${new Date().toISOString().slice(0, 10)}.txt`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+
+      setDownloadMsg("✅ Report downloaded & emailed to parent!")
+    } catch (err) {
+      console.error(err)
+      setDownloadMsg("❌ Failed to generate report.")
+    } finally {
+      setIsDownloading(false)
+      setTimeout(() => setDownloadMsg(""), 4000)
+    }
   }
 
   if (loading) return null
@@ -99,15 +134,23 @@ export default function AnalyticsPage() {
               <p className="text-chalk-white/50 text-sm">Performance breakdown for {childId}</p>
             </div>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleDownloadReport}
-            className="px-5 py-2.5 rounded-xl glass text-chalk-white font-medium text-sm flex items-center gap-2 hover:bg-chalk-white/10"
-          >
-            <Download className="w-4 h-4" />
-            Download Report
-          </motion.button>
+          <div className="flex flex-col items-end gap-2">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleDownloadReport}
+              disabled={isDownloading}
+              className="px-5 py-2.5 rounded-xl glass text-chalk-white font-medium text-sm flex items-center gap-2 hover:bg-chalk-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className={`w-4 h-4 ${isDownloading ? "animate-bounce" : ""}`} />
+              {isDownloading ? "Generating..." : "Download Report"}
+            </motion.button>
+            {downloadMsg && (
+              <span className={`text-xs font-medium ${downloadMsg.startsWith("✅") ? "text-neon-green" : "text-red-400"}`}>
+                {downloadMsg}
+              </span>
+            )}
+          </div>
         </motion.div>
 
         {/* Summary Cards */}
