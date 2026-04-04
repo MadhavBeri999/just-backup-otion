@@ -184,26 +184,33 @@ export default function DashboardPage() {
               value: summary?.total_children ?? 0,
               icon: GraduationCap,
               color: "text-neon-blue",
+              bgCard: "bg-neon-blue/10 hover:bg-neon-blue/20 border-neon-blue/20 shadow-[0_4px_20px_rgba(0,184,255,0.05)] hover:shadow-[0_8px_30px_rgba(0,184,255,0.15)]",
+              bgIcon: "bg-neon-blue/20",
             },
             {
               label: "Active Sessions",
               value: summary?.active_sessions ?? 0,
               icon: Zap,
               color: "text-neon-green",
+              bgCard: "bg-neon-green/10 hover:bg-neon-green/20 border-neon-green/20 shadow-[0_4px_20px_rgba(34,197,94,0.05)] hover:shadow-[0_8px_30px_rgba(34,197,94,0.15)]",
+              bgIcon: "bg-neon-green/20",
             },
             {
               label: "Today's Study",
               value: `${summary?.today_study_minutes ?? 0} min`,
               icon: Clock,
               color: "text-neon-yellow",
+              bgCard: "bg-neon-yellow/10 hover:bg-neon-yellow/20 border-neon-yellow/20 shadow-[0_4px_20px_rgba(250,204,21,0.05)] hover:shadow-[0_8px_30px_rgba(250,204,21,0.15)]",
+              bgIcon: "bg-neon-yellow/20",
             },
             {
               label: "Total Alerts",
               value: summary?.total_alerts ?? 0,
               icon: AlertTriangle,
               color: "text-neon-pink",
+              bgCard: "bg-neon-pink/10 hover:bg-neon-pink/20 border-neon-pink/20 shadow-[0_4px_20px_rgba(236,72,153,0.05)] hover:shadow-[0_8px_30px_rgba(236,72,153,0.15)]",
+              bgIcon: "bg-neon-pink/20",
             },
-
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -211,14 +218,14 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
             >
-              <GlassCard hover={false} className="p-4">
+              <GlassCard hover={true} className={`p-4 transition-all duration-300 border ${stat.bgCard}`}>
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl bg-chalk-white/5 flex items-center justify-center`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${stat.bgIcon}`}>
                     <stat.icon className={`w-5 h-5 ${stat.color}`} />
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-chalk-white">{stat.value}</p>
-                    <p className="text-xs text-chalk-white/40">{stat.label}</p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-chalk-white/60 mt-1">{stat.label}</p>
                   </div>
                 </div>
               </GlassCard>
@@ -295,7 +302,7 @@ export default function DashboardPage() {
             <Clock className="w-5 h-5 text-neon-yellow" />
             Recent Sessions
           </h2>
-          <GlassCard hover={false}>
+          <GlassCard hover={true} className="bg-chalk-white/5 border border-chalk-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)] hover:bg-chalk-white/10 transition-colors">
             <div className="flex flex-col divide-y divide-chalk-white/5">
               {recentSessions.length === 0 ? (
                 <div className="py-6 text-center text-chalk-white/40 text-sm">

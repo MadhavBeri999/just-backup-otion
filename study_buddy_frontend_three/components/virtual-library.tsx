@@ -147,12 +147,11 @@ export function VirtualLibrary() {
           ) : (
             <WifiOff className="w-3 h-3 text-chalk-white/30" />
           )}
-          <span className={`text-[10px] font-mono uppercase ${
-            status === "paired" ? "text-neon-green" : 
-            status === "waiting" ? "text-neon-yellow animate-pulse" :
-            status === "disconnected" ? "text-red-400" :
-            "text-chalk-white/30"
-          }`}>
+          <span className={`text-[10px] font-mono uppercase ${status === "paired" ? "text-neon-green" :
+              status === "waiting" ? "text-neon-yellow animate-pulse" :
+                status === "disconnected" ? "text-red-400" :
+                  "text-chalk-white/30"
+            }`}>
             {status === "connecting" && "Connecting..."}
             {status === "waiting" && "Waiting for partner..."}
             {status === "paired" && "Connected"}
@@ -190,8 +189,8 @@ export function VirtualLibrary() {
           ) : (
             <div className="w-full aspect-video rounded-xl bg-black/40 border border-white/5 flex items-center justify-center">
               <span className="text-[10px] text-chalk-white/20 uppercase tracking-widest text-center px-4">
-                {status === "waiting" ? "Waiting for\npartner..." : 
-                 status === "disconnected" ? "Partner left" : "..."}
+                {status === "waiting" ? "Waiting for\npartner..." :
+                  status === "disconnected" ? "Partner left" : "..."}
               </span>
             </div>
           )}

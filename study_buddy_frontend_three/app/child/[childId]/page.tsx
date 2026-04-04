@@ -284,39 +284,41 @@ export default function ChildTaskPage() {
         </AnimatePresence>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <GlassCard hover={false} className="p-4 border-none bg-black/20">
-              <p className="text-2xl font-bold text-chalk-white">{tasks.length}</p>
-              <p className="text-xs text-chalk-white/40 uppercase tracking-wider">Total Tasks</p>
+        <div className="grid grid-cols-3 gap-4 mb-8" style={{ perspective: "1000px" }}>
+          <motion.div whileHover={{ scale: 1.05, rotateX: 5, rotateY: -5 }} style={{ transformStyle: "preserve-3d" }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <GlassCard hover={true} className="p-4 border border-neon-blue/20 bg-neon-blue/10 shadow-[0_10px_30px_rgba(0,184,255,0.1)]">
+              <p className="text-3xl font-black text-chalk-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{tasks.length}</p>
+              <p className="text-[10px] text-chalk-white/80 uppercase tracking-widest font-bold mt-1">Total Tasks</p>
             </GlassCard>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <GlassCard hover={false} className="p-4 border-none bg-black/20">
-              <p className="text-2xl font-bold text-neon-yellow">
+          <motion.div whileHover={{ scale: 1.05, rotateX: 5, rotateY: 0 }} style={{ transformStyle: "preserve-3d" }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <GlassCard hover={true} className="p-4 border border-neon-yellow/20 bg-neon-yellow/10 shadow-[0_10px_30px_rgba(250,204,21,0.15)]">
+              <p className="text-3xl font-black text-neon-yellow drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]">
                 {tasks.filter((t) => t.is_completed !== 1).length}
               </p>
-              <p className="text-xs text-chalk-white/40 uppercase tracking-wider">Pending</p>
+              <p className="text-[10px] text-neon-yellow/80 uppercase tracking-widest font-bold mt-1">Pending</p>
             </GlassCard>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <GlassCard hover={false} className="p-4 border-none bg-black/20">
-              <p className="text-2xl font-bold text-neon-green">
+          <motion.div whileHover={{ scale: 1.05, rotateX: 5, rotateY: 5 }} style={{ transformStyle: "preserve-3d" }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <GlassCard hover={true} className="p-4 border border-neon-green/20 bg-neon-green/10 shadow-[0_10px_30px_rgba(34,197,94,0.15)]">
+              <p className="text-3xl font-black text-neon-green drop-shadow-[0_0_15px_rgba(34,197,94,0.8)]">
                 {tasks.filter((t) => t.is_completed === 1).length}
               </p>
-              <p className="text-xs text-chalk-white/40 uppercase tracking-wider">Completed</p>
+              <p className="text-[10px] text-neon-green/80 uppercase tracking-widest font-bold mt-1">Completed</p>
             </GlassCard>
           </motion.div>
         </div>
 
         {/* Task List */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4" style={{ perspective: "1000px" }}>
           <AnimatePresence mode="popLayout">
             {tasks.map((task, index) => (
               <motion.div
                 key={task.id}
+                whileHover={{ scale: 1.02, rotateX: 2 }}
+                style={{ transformStyle: "preserve-3d" }}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}

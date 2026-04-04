@@ -7,6 +7,7 @@ import { GlassCard } from "@/components/glass-card"
 import { HeartLives } from "@/components/heart-lives"
 import { Timer } from "@/components/timer"
 import { AIChat } from "@/components/ai-chat"
+import { VirtualLibrary } from "@/components/virtual-library"
 import { ExitTrapModal } from "@/components/exit-trap-modal"
 import Confetti from "react-confetti"
 import { loadModel, detectFrame } from "@/ai/detector"
@@ -277,20 +278,18 @@ export default function StudySessionPage() {
     // 2. LIVE PHONE DETECTED!
     if (type === "phone") {
       if (warning === "phone") return;
-      if (now - lastPenaltyTime.current < 5000) return; // 5s padding
+      if (now - lastPenaltyTime.current < 2000) return; // 2s cooldown — catches phone FAST
 
       setWarning("phone");
       triggerDistraction("phone"); // <- Hits game logic!
       lastPenaltyTime.current = now;
 
-      // Let the warning stick briefly
-      setTimeout(() => setWarning("none"), 3500);
+      setTimeout(() => setWarning("none"), 2500);
     }
 
     // 3. NO FACE / AFK
     if (type === "no_face" && warning !== "no_face") {
       setWarning("no_face");
-      // Start 5s countdown visibly...
       distractionTimerRef.current = setTimeout(() => {
         setFaceCountdown(5);
 
@@ -308,20 +307,7 @@ export default function StudySessionPage() {
             return prev - 1;
           });
         }, 1000);
-      }, 1000); // Only waited 1s internally due to the detector.ts supplying 5s prior
-    }
-
-    // 4. LOOKING DOWN
-    if (type === "looking_down") {
-      if (warning === "looking_down") return;
-      if (now - lastPenaltyTime.current < 5000) return; // 5s padding
-
-      setWarning("looking_down");
-      triggerDistraction("looking_down"); // <- Hits game logic!
-      lastPenaltyTime.current = now;
-
-      // Let the warning stick briefly
-      setTimeout(() => setWarning("none"), 3500);
+      }, 1000);
     }
   }, [warning, triggerDistraction]);
 
@@ -564,8 +550,8 @@ export default function StudySessionPage() {
           <HeartLives maxLives={5} currentLives={lives} />
         </div>
 
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 flex flex-col gap-8">
+        <div className="max-w-[1400px] w-full mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6 px-2">
+          <div className="lg:col-span-3 flex flex-col gap-6">
             <GlassCard hover={false} className="border-white/5 p-4">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-[10px] font-bold text-chalk-white uppercase tracking-widest flex items-center gap-2">
@@ -655,7 +641,7 @@ export default function StudySessionPage() {
           </div>
 
           {/* Right Column */}
-          <div className="flex flex-col gap-8">
+          <div className="lg:col-span-1 flex flex-col gap-4">
             <GlassCard hover={false} className="border-white/5">
               <div className="flex items-center gap-2 mb-6">
                 <BookOpen className="w-4 h-4 text-neon-yellow" />
@@ -682,17 +668,28 @@ export default function StudySessionPage() {
 
             <div className="flex flex-col gap-4">
               {showChat ? (
-                <div className="h-full min-h-[400px]">
-                  <button onClick={() => setShowChat(false)} className="w-full text-center text-xs text-chalk-white/40 mb-2 hover:text-white transition-colors">Hide Buddy AI</button>
+                <div className="h-full min-h-[400px] border-2 border-neon-pink/40 rounded-3xl p-1 bg-neon-pink/5 shadow-[0_0_20px_rgba(236,72,153,0.1)] relative overflow-hidden">
+                  <button onClick={() => setShowChat(false)} className="w-full text-center text-[10px] text-neon-pink/60 mb-2 hover:text-neon-pink transition-colors font-bold uppercase tracking-widest pt-2">HIDE BESTIE</button>
                   <AIChat />
                 </div>
               ) : (
-                <button onClick={() => setShowChat(true)} className="w-full py-5 rounded-3xl glass text-chalk-white font-bold text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-white/10 transition-all border border-white/10 group">
-                  <MessageCircle className="w-5 h-5 text-neon-blue group-hover:scale-110 transition-transform" />
-                  Buddy AI
-                </button>
+                <motion.button
+                  animate={{ y: [0, -4, 0], scale: [1, 1.02, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  onClick={() => setShowChat(true)}
+                  className="w-full relative overflow-hidden py-6 rounded-3xl glass font-bold uppercase tracking-widest flex flex-col items-center justify-center gap-3 bg-neon-pink/10 hover:bg-neon-pink/20 transition-all border-2 border-neon-pink/50 group shadow-[0_0_30px_rgba(236,72,153,0.3)]"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-neon-pink/20 via-neon-purple/20 to-neon-blue/20 opacity-50 animate-pulse pointer-events-none" />
+                  <MessageCircle className="w-8 h-8 text-neon-pink group-hover:scale-110 transition-transform relative z-10 drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]" />
+                  <span className="relative z-10 text-center font-black text-neon-pink text-[11px] drop-shadow-md tracking-wider leading-relaxed">
+                    Wassup bestie! ✨<br />I'm your AI Buddy, no cap.
+                  </span>
+                </motion.button>
               )}
             </div>
+
+            {/* Virtual Co-Study Library */}
+            <VirtualLibrary />
           </div>
         </div>
       </div>

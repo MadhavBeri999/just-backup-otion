@@ -19,24 +19,24 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
     const t4 = setTimeout(() => setPhase(4), 4800)   // Magic Text fades in, holds
     const t5 = setTimeout(() => setPhase(5), 7500)   // Text zooms out, book fades
     const t6 = setTimeout(() => onComplete(), 9000) // Unmount
-    
+
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5); clearTimeout(t6); }
   }, [onComplete])
 
   return (
     <div className="fixed inset-0 z-[999] bg-[#050508] overflow-hidden flex items-center justify-center perspective-[2500px]">
-      
+
       {/* Ambient background glow */}
-      <motion.div 
+      <motion.div
         animate={{ opacity: phase >= 4 ? 0.8 : 0.3 }}
         transition={{ duration: 2 }}
-        className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.15)_0%,_transparent_60%)] pointer-events-none" 
+        className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.15)_0%,_transparent_60%)] pointer-events-none"
       />
 
       {/* The Magic Book Container */}
       <AnimatePresence>
         {phase < 5 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.8, y: 50, rotateX: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0, rotateX: 10 }}
             exit={{ opacity: 0, transition: { duration: 1.5 } }}
@@ -61,23 +61,23 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
 
             {/* THE FINAL SPREAD (Right Page) */}
             <div className="absolute inset-y-2 left-1 right-3 bg-[#fdfbf7] rounded-r-md border-l border-black/10 overflow-hidden shadow-[-5px_0_15px_rgba(0,0,0,0.1)] flex items-center justify-center p-8">
-               {/* Ambient Pencil Sketch Background */}
-               <div className="absolute inset-0 opacity-10 font-[family-name:var(--font-chalk)] text-sm whitespace-pre pointer-events-none overflow-hidden text-center text-slate-800 rotate-[-5deg]">
-                 {`\n∫ e^x dx = e^x + C\n\nF = G(m1m2)/r^2\n\nΔS ≥ 0\n\nH20 → 2H+ + O2-`}
-               </div>
+              {/* Ambient Pencil Sketch Background */}
+              <div className="absolute inset-0 opacity-40 font-[family-name:var(--font-chalk)] text-sm whitespace-pre pointer-events-none overflow-hidden text-center text-slate-900 font-bold rotate-[-5deg]">
+                {`\n∫ e^x dx = e^x + C\n\nF = G(m1m2)/r^2\n\nΔS ≥ 0\n\nH20 → 2H+ + O2-`}
+              </div>
 
-               {/* Magic Text Reveals Here */}
-               <motion.div
-                  initial={{ opacity: 0, filter: "blur(10px)", scale: 0.9 }}
-                  animate={{ opacity: phase >= 4 ? 1 : 0, filter: phase >= 4 ? "blur(0px)" : "blur(10px)", scale: phase >= 4 ? 1 : 0.9 }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="flex flex-col items-center relative z-10"
-               >
-                 <h1 className="text-3xl md:text-5xl font-serif font-bold text-[#1a1a1a] text-center leading-tight">
-                   Padhle Bhai <br/>
-                   <span className="text-[#d4af37] inline-block mt-2 font-emoji">🫵</span>
-                 </h1>
-               </motion.div>
+              {/* Magic Text Reveals Here */}
+              <motion.div
+                initial={{ opacity: 0, filter: "blur(10px)", scale: 0.9 }}
+                animate={{ opacity: phase >= 4 ? 1 : 0, filter: phase >= 4 ? "blur(0px)" : "blur(10px)", scale: phase >= 4 ? 1 : 0.9 }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                className="flex flex-col items-center relative z-10"
+              >
+                <h1 className="text-3xl md:text-5xl font-serif font-bold text-[#1a1a1a] text-center leading-tight">
+                  Padhle Bhai <br />
+                  <span className="text-[#d4af37] inline-block mt-2 font-emoji">🫵</span>
+                </h1>
+              </motion.div>
             </div>
 
             {/* --- FLIPPING PAGES (Anchored at left edge/spine) --- */}
@@ -90,13 +90,13 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
               className="absolute inset-y-2 left-[3px] right-[10px] origin-left"
               style={{ transformStyle: "preserve-3d" }}
             >
-              <div className="absolute inset-0 bg-[#fdfbf7] rounded-r-md border-l border-black/10 border-r-2 border-[#d4cfc0] p-6 text-[10px] md:text-sm font-[family-name:var(--font-chalk)] text-slate-800/20 italic" style={{ backfaceVisibility: "hidden" }}>
+              <div className="absolute inset-0 bg-[#fdfbf7] rounded-r-md border-l border-black/10 border-r-2 border-[#d4cfc0] p-6 text-[10px] md:text-sm font-[family-name:var(--font-chalk)] text-slate-900/60 font-medium italic" style={{ backfaceVisibility: "hidden" }}>
                 <p>Theory of Relativity:</p>
-                <h3 className="text-xl md:text-3xl text-center my-4 font-bold text-slate-800/40 opacity-70 border-b border-slate-800/20 pb-2">E = mc²</h3>
+                <h3 className="text-xl md:text-3xl text-center my-4 font-bold text-slate-900 opacity-100 border-b border-slate-900/40 pb-2">E = mc²</h3>
                 <p className="indent-4 leading-relaxed">The equation expresses the fact that mass and energy are the same physical entity and can be changed into each other.</p>
               </div>
               <div className="absolute inset-0 bg-[#fdfbf7] rounded-l-md border-r border-[#d4cfc0] shadow-[5px_0_10px_rgba(0,0,0,0.1)] flex items-center justify-center" style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}>
-                 <div className="w-20 h-20 rounded-full border-2 border-dashed border-slate-800/10" />
+                <div className="w-20 h-20 rounded-full border-2 border-dashed border-slate-800/10" />
               </div>
             </motion.div>
 
@@ -108,10 +108,10 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
               className="absolute inset-y-2 left-[2px] right-[8px] origin-left"
               style={{ transformStyle: "preserve-3d" }}
             >
-              <div className="absolute inset-0 bg-[#fdfbf7] rounded-r-md border-l border-black/10 border-r-2 border-[#d4cfc0] p-6 text-xs md:text-sm font-[family-name:var(--font-chalk)] text-slate-800/30 overflow-hidden" style={{ backfaceVisibility: "hidden" }}>
+              <div className="absolute inset-0 bg-[#fdfbf7] rounded-r-md border-l border-black/10 border-r-2 border-[#d4cfc0] p-6 text-xs md:text-sm font-[family-name:var(--font-chalk)] text-slate-900/70 font-medium overflow-hidden" style={{ backfaceVisibility: "hidden" }}>
                 <p className="font-bold underline mb-2">Cellular Respiration</p>
                 <p>C6H12O6 + 6O2 → 6CO2 + 6H2O</p>
-                <div className="mt-4 border border-slate-800/20 p-4 rotate-2 opacity-50">
+                <div className="mt-4 border border-slate-900/40 p-4 rotate-2 opacity-90 font-bold">
                   Mitochondria (Powerhouse)
                 </div>
               </div>
@@ -122,18 +122,18 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             <motion.div
               initial={{ rotateY: 0 }}
               animate={{ rotateY: phase >= 1 ? -182 : 0 }}
-              transition={{ duration: 2, ease: [0.4, 0, 0.2, 1] }} 
+              transition={{ duration: 2, ease: [0.4, 0, 0.2, 1] }}
               className="absolute inset-0 origin-left"
               style={{ transformStyle: "preserve-3d" }}
             >
               {/* Outside of the Cover */}
               <div className="absolute inset-0 bg-[#4a2e18] rounded-r-2xl border-y-4 border-r-4 border-l-2 border-[#2b1708] shadow-[5px_0_20px_rgba(0,0,0,0.6)] flex items-center justify-center overflow-hidden" style={{ backfaceVisibility: "hidden" }}>
                 <div className="absolute inset-0 opacity-40 mix-blend-multiply bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')]" />
-                
+
                 {/* Decorative leather stitching / embossing */}
                 <div className="absolute inset-3 border-2 border-[#3d2411]/50 rounded-xl" />
                 <div className="absolute inset-4 border border-[#2b1708]/30 rounded-lg" />
-                
+
                 <div className="relative z-10 p-8 border-4 border-[#3d2411]/50 rounded-full">
                   <BookOpen className="w-16 h-16 text-[#2b1708]/60" />
                 </div>
@@ -154,17 +154,19 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
       {/* THE MAGIC ZOOM TEXT */}
       <AnimatePresence>
         {phase >= 5 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1.5 }}
             exit={{ opacity: 0, scale: 3, filter: "blur(20px)" }}
             transition={{ duration: 1.5, ease: "easeInOut" }}
             className="absolute z-50 flex flex-col items-center justify-center pointer-events-none"
           >
-            <h1 className="text-6xl md:text-8xl font-serif font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-[#d4af37] drop-shadow-[0_0_40px_rgba(212,175,55,0.8)] text-center tracking-tight leading-tight flex flex-col items-center">
-              Padhle Bhai <br/>
-              <span className="inline-block mt-4 filter drop-shadow-[0_0_20px_rgba(212,175,55,1)]">🫵</span>
-            </h1>
+            <div className="flex justify-center items-center gap-6 mt-8">
+              <h1 className="text-6xl md:text-8xl font-serif font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-[#d4af37] drop-shadow-[0_0_40px_rgba(212,175,55,0.8)] tracking-tight leading-tight">
+                Padhle Bhai
+              </h1>
+              <span className="text-[100px] md:text-[140px] filter drop-shadow-[0_0_30px_rgba(212,175,55,1)] pointer-events-none -rotate-12 translate-y-4">🫵</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

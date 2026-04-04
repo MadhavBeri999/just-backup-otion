@@ -159,6 +159,27 @@ def end_session(
                 lng=lng,
             )
 
+        # -----------------------------
+        # GENERATE & EMAIL STUDY REPORT
+        # -----------------------------
+        from app.routes.report_routes import generate_report_text, get_weekly_data, email_report
+        from app.database.models import AIPrompt
+        
+        child_id = child.id
+        all_sessions = db.query(StudySession).filter(StudySession.child_id == child_id).all()
+        completed_tasks = db.query(Task).filter(Task.child_id == child_id, Task.is_completed == 1).count()
+        ai_prompts = db.query(AIPrompt).filter(AIPrompt.child_id == child_id).order_by(AIPrompt.created_at.desc()).all()
+        
+        weekly_data = get_weekly_data(all_sessions, ai_prompts)
+        report_text = generate_report_text(child, all_sessions, completed_tasks, ai_prompts, weekly_data)
+        
+        background_tasks.add_task(
+            email_report,
+            parent_email=current_parent.email,
+            child_name=child.name,
+            report_text=report_text
+        )
+
     return session
 
 
